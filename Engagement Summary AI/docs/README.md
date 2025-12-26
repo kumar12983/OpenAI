@@ -14,6 +14,12 @@ This toolkit produces fiscal-year engagement, employee, and monthly summaries wi
 ## Prerequisites
 - Python 3.12+ with pandas, numpy, openpyxl (already installed in .venv)
 - Raw input files: WIPs*.xlsx, Bills_*.xlsx, BoB_*.xlsx
+- # Requirements
+  - pandas>=2.0.0
+  - numpy>=1.24.0
+  - openpyxl>=3.1.0
+  - msal>=1.24.0
+  - requests>=2.31.0
 
 ## Quick start
 
