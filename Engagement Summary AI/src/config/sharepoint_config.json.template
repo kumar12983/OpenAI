@@ -1,0 +1,37 @@
+{
+  "_comment": "SharePoint Configuration for Microsoft Graph API",
+  
+  "tenant_id": "5b973f99-77df-4beb-b27d-aa0c70b8482c",
+  "client_id": "YOUR_CLIENT_ID",
+  "client_secret": "YOUR_CLIENT_SECRET",
+  
+  "sharepoint_domain": "https://eyaustralia.sharepoint.com",
+  
+  "scopes": [
+    "https://graph.microsoft.com/Files.ReadWrite.All",
+    "https://graph.microsoft.com/Sites.ReadWrite.All",
+    "https://graph.microsoft.com/Mail.Send"
+  ],
+  
+  "_instructions": {
+    "tenant_id": "Find in Azure Portal > Azure Active Directory > Overview",
+    "client_id": "App Registration > Application (client) ID",
+    "client_secret": "App Registration > Certificates & secrets (only for app-only auth)",
+    "sharepoint_domain": "Your SharePoint domain (e.g., contoso.sharepoint.com)",
+    
+    "permissions_required": [
+      "Files.ReadWrite.All - Read/write files in SharePoint",
+      "Sites.ReadWrite.All - Access SharePoint sites",
+      "Mail.Send - Send emails (optional, for notifications)"
+    ],
+    
+    "setup_steps": [
+      "1. Go to Azure Portal > App Registrations",
+      "2. Create new app registration or use existing",
+      "3. Add API permissions: Microsoft Graph > Delegated/Application permissions",
+      "4. Grant admin consent for the permissions",
+      "5. For app-only auth: Create client secret under Certificates & secrets",
+      "6. Copy tenant_id, client_id, and client_secret to this file"
+    ]
+  }
+}
