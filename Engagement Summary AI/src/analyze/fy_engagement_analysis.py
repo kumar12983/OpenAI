@@ -184,6 +184,9 @@ def engagement_summary(df: pd.DataFrame,
 
 
 def add_totals_and_format(ws) -> None:
+    """Add totals row and apply comprehensive Excel formatting."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
     headers = [cell.value for cell in ws[1]]
     last_row = ws.max_row
     ws.cell(row=last_row + 1, column=1).value = 'TOTAL'
@@ -204,6 +207,206 @@ def add_totals_and_format(ws) -> None:
         green_fill = PatternFill(start_color='FFC6EFCE', end_color='FFC6EFCE', fill_type='solid')
         ws.conditional_formatting.add(data_range, CellIsRule(operator='greaterThan', formula=['0'], fill=red_fill))
         ws.conditional_formatting.add(data_range, CellIsRule(operator='lessThan', formula=['0'], fill=green_fill))
+
+
+def format_engagement_summary_sheet(ws) -> None:
+    """Apply comprehensive formatting to Engagement Summary sheets."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
+    # Define column widths for Engagement Summary
+    column_widths = {
+        'Engagement ID': 16.43,
+        'Engagement Name': 48.14,
+        'ANSR / Tech Revenue': 23.57,
+        'Margin Cost': 16.86,
+        'Margin Amount': 18.43,
+        'TER': 16.86,
+        'Margin %': 11.43,
+        'Hours': 13.0,
+        'Engagement Partner': 21.14,
+        'Engagement Manager': 22.43,
+        'Engagement Status': 20.0,
+        'NUI ETD': 14.29
+    }
+    
+    # Define number formats
+    money_format = '_-"$"* #,##0.00_-;\\-"$"* #,##0.00_-;_-"$"* "-"??_-;_-@_-'
+    
+    # Get headers
+    headers = [cell.value for cell in ws[1]]
+    
+    # Format header row
+    thin_border = Border(bottom=Side(style='thin'))
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = Font(bold=True, size=11, name='Calibri')
+        cell.alignment = Alignment(horizontal='center', vertical='top')
+        cell.border = thin_border
+        
+        # Set column width
+        col_letter = get_column_letter(col_idx)
+        if header in column_widths:
+            ws.column_dimensions[col_letter].width = column_widths[header]
+    
+    # Format data rows
+    last_row = ws.max_row
+    for row_idx in range(2, last_row + 1):
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            # Apply number formatting
+            if header in ['ANSR / Tech Revenue', 'Margin Cost', 'Margin Amount', 'TER', 'NUI ETD']:
+                cell.number_format = money_format
+
+
+def format_employee_summary_sheet(ws) -> None:
+    """Apply comprehensive formatting to Employee Summary sheet."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
+    # Define column widths for Employee Summary
+    column_widths = {
+        'Employee / Product Name': 37.29,
+        'Employee GUI / Product ID': 26.71,
+        'Rank / Method': 17.43,
+        'Grade': 8.57,
+        'Employee Region': 18.57,
+        'Country / Region': 18.0,
+        'Service Line': 13.71,
+        'Hours': 9.14,
+        'NSR': 16.86,
+        'ANSR': 13.0,
+        'Margin Cost': 13.0,
+        'Expense Amount': 19.57,
+        '#Engagements': 16.0,
+        '#Opportunities': 16.57,
+        'TER': 16.86,
+        'Margin Amount': 18.43,
+        'Margin % (on ANSR)': 20.86,
+        'EAF (ANSR/NSR)': 17.57,
+        'Level': 7.86
+    }
+    
+    # Define number formats
+    money_format = '_-"$"* #,##0.00_-;\\-"$"* #,##0.00_-;_-"$"* "-"??_-;_-@_-'
+    
+    # Get headers
+    headers = [cell.value for cell in ws[1]]
+    
+    # Format header row
+    thin_border = Border(bottom=Side(style='thin'))
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = Font(bold=True, size=11, name='Calibri')
+        cell.alignment = Alignment(horizontal='center', vertical='top')
+        cell.border = thin_border
+        
+        # Set column width
+        col_letter = get_column_letter(col_idx)
+        if header in column_widths:
+            ws.column_dimensions[col_letter].width = column_widths[header]
+    
+    # Format data rows
+    last_row = ws.max_row
+    for row_idx in range(2, last_row + 1):
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            # Apply number formatting
+            if header in ['NSR', 'ANSR', 'Margin Cost', 'Expense Amount', 'TER', 'Margin Amount']:
+                cell.number_format = money_format
+
+
+def format_monthly_summary_sheet(ws) -> None:
+    """Apply comprehensive formatting to Monthly Summary sheet."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
+    # Define number formats
+    money_format = '_-"$"* #,##0.00_-;\\-"$"* #,##0.00_-;_-"$"* "-"??_-;_-@_-'
+    
+    # Get headers
+    headers = [cell.value for cell in ws[1]]
+    
+    # Format header row
+    thin_border = Border(bottom=Side(style='thin'))
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = Font(bold=True, size=11, name='Calibri')
+        cell.alignment = Alignment(horizontal='center', vertical='top')
+        cell.border = thin_border
+        
+        # Set column width
+        col_letter = get_column_letter(col_idx)
+        if header == 'Month':
+            ws.column_dimensions[col_letter].width = 12.0
+        else:
+            ws.column_dimensions[col_letter].width = 16.86
+    
+    # Format data rows
+    last_row = ws.max_row
+    for row_idx in range(2, last_row + 1):
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            # Apply number formatting
+            if header in ['ANSR / Tech Revenue', 'Margin Cost', 'Margin Amount', 'Expense Amount', 'TER']:
+                cell.number_format = money_format
+
+
+def format_recon_sheet(ws) -> None:
+    """Apply comprehensive formatting to WIP vs BoB Recon sheet."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
+    # Get headers
+    headers = [cell.value for cell in ws[1]]
+    
+    # Format header row
+    thin_border = Border(bottom=Side(style='thin'))
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = Font(bold=True, size=11, name='Calibri')
+        cell.alignment = Alignment(horizontal='center', vertical='top')
+        cell.border = thin_border
+        
+        # Set column width based on content
+        col_letter = get_column_letter(col_idx)
+        if header == 'Engagement ID':
+            ws.column_dimensions[col_letter].width = 16.43
+        elif header == 'Engagement Name':
+            ws.column_dimensions[col_letter].width = 48.14
+        elif header in ['In WIP', 'In BoB']:
+            ws.column_dimensions[col_letter].width = 10.0
+        elif header == 'Status':
+            ws.column_dimensions[col_letter].width = 20.0
+        else:
+            ws.column_dimensions[col_letter].width = 15.0
+
+
+def format_kpi_sheet(ws) -> None:
+    """Apply comprehensive formatting to KPI sheets."""
+    from openpyxl.styles import Font, Alignment, Border, Side
+    
+    # Define number formats
+    money_format = '_-"$"* #,##0.00_-;\\-"$"* #,##0.00_-;_-"$"* "-"??_-;_-@_-'
+    
+    # Get headers
+    headers = [cell.value for cell in ws[1]]
+    
+    # Format header row
+    thin_border = Border(bottom=Side(style='thin'))
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = Font(bold=True, size=11, name='Calibri')
+        cell.alignment = Alignment(horizontal='center', vertical='top', wrap_text=True)
+        cell.border = thin_border
+        
+        # Set column width
+        col_letter = get_column_letter(col_idx)
+        ws.column_dimensions[col_letter].width = 20.0
+    
+    # Format data row
+    if ws.max_row >= 2:
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=2, column=col_idx)
+            # Apply money formatting to relevant columns
+            if any(term in str(header) for term in ['Amount', 'Revenue', 'Cost', 'BILLINGS', 'ANSR', 'TER', 'Expense', 'Margin']):
+                cell.number_format = money_format
 
 
 def employee_level(rank: str, grade: str) -> float:
@@ -280,6 +483,76 @@ def load_nui_etd(bob_file: Optional[str]) -> Optional[pd.DataFrame]:
     except Exception as e:
         print(f'Warning: Could not load NUI ETD data: {e}', file=sys.stderr)
         return None
+
+
+def wip_bob_reconciliation(df_wip: pd.DataFrame, bob_data: Optional[pd.DataFrame]) -> pd.DataFrame:
+    """Create reconciliation of Engagement IDs between WIP and BoB."""
+    # Get unique engagement IDs and names from WIP
+    wip_engagements = df_wip[['Engagement ID', 'Engagement Name']].drop_duplicates()
+    wip_ids = set(wip_engagements['Engagement ID'].dropna().unique())
+    
+    # Get unique engagement IDs from BoB
+    bob_ids = set()
+    if bob_data is not None and 'Engagement ID' in bob_data.columns:
+        bob_ids = set(bob_data['Engagement ID'].dropna().unique())
+    
+    # Find differences
+    only_in_wip = wip_ids - bob_ids
+    only_in_bob = bob_ids - wip_ids
+    in_both = wip_ids & bob_ids
+    
+    # Build reconciliation dataframe
+    recon_data = []
+    
+    # Engagements in both
+    for eng_id in sorted(in_both):
+        eng_name = wip_engagements[wip_engagements['Engagement ID'] == eng_id]['Engagement Name'].iloc[0] if not wip_engagements[wip_engagements['Engagement ID'] == eng_id].empty else ''
+        recon_data.append({
+            'Engagement ID': eng_id,
+            'Engagement Name': eng_name,
+            'In WIP': 'Yes',
+            'In BoB': 'Yes',
+            'Status': 'Matched'
+        })
+    
+    # Engagements only in WIP
+    for eng_id in sorted(only_in_wip):
+        eng_name = wip_engagements[wip_engagements['Engagement ID'] == eng_id]['Engagement Name'].iloc[0] if not wip_engagements[wip_engagements['Engagement ID'] == eng_id].empty else ''
+        recon_data.append({
+            'Engagement ID': eng_id,
+            'Engagement Name': eng_name,
+            'In WIP': 'Yes',
+            'In BoB': 'No',
+            'Status': 'Missing in BoB'
+        })
+    
+    # Engagements only in BoB
+    for eng_id in sorted(only_in_bob):
+        recon_data.append({
+            'Engagement ID': eng_id,
+            'Engagement Name': '',
+            'In WIP': 'No',
+            'In BoB': 'Yes',
+            'Status': 'Missing in WIP'
+        })
+    
+    recon_df = pd.DataFrame(recon_data)
+    
+    # Add summary at the top
+    summary_data = [
+        {'Engagement ID': 'SUMMARY', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': f'Total in WIP: {len(wip_ids)}', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': f'Total in BoB: {len(bob_ids)}', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': f'Matched: {len(in_both)}', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': f'Only in WIP: {len(only_in_wip)}', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': f'Only in BoB: {len(only_in_bob)}', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+        {'Engagement ID': '', 'Engagement Name': '', 'In WIP': '', 'In BoB': '', 'Status': ''},
+    ]
+    
+    summary_df = pd.DataFrame(summary_data)
+    result = pd.concat([summary_df, recon_df], ignore_index=True)
+    
+    return result
 
 
 def employee_summary(df: pd.DataFrame) -> pd.DataFrame:
@@ -419,6 +692,9 @@ def run(input_file: str,
     emp = employee_summary(df_fy)
     totals = kpi_totals(df_fy)
 
+    # Create WIP vs BoB reconciliation
+    recon = wip_bob_reconciliation(df_all, nui_etd)
+
     bridge = None
     if billings_str is not None and target_margin_pct is not None:
         billings = parse_billings(billings_str)
@@ -433,32 +709,62 @@ def run(input_file: str,
         eng_etd.to_excel(writer, sheet_name='Engagement Summary (ETD)', index=False)
         emp.to_excel(writer, sheet_name='Employee Summary', index=False)
         monthly.to_excel(writer, sheet_name='Monthly Summary', index=False)
+        recon.to_excel(writer, sheet_name='WIP vs BoB Recon', index=False)
         pd.DataFrame([totals]).to_excel(writer, sheet_name='KPI Totals', index=False)
         if bridge is not None:
             pd.DataFrame([bridge]).to_excel(writer, sheet_name='KPI Bridge', index=False)
 
-    # Add total rows with SUBTOTAL formulas
+    # Add total rows with SUBTOTAL formulas and apply comprehensive formatting
     wb = load_workbook(output_file)
 
     # Engagement Summary totals + conditional formatting (both FYTD and ETD)
     for sheet_name in ['Engagement Summary (FYTD)', 'Engagement Summary (ETD)']:
         if sheet_name in wb.sheetnames:
             add_totals_and_format(wb[sheet_name])
+            format_engagement_summary_sheet(wb[sheet_name])
 
-    # Employee Summary totals
-    ws_emp = wb['Employee Summary']
-    last_row_emp = ws_emp.max_row
-    headers_emp = [cell.value for cell in ws_emp[1]]
-    ws_emp.cell(row=last_row_emp + 1, column=1).value = 'TOTAL'
-    emp_numeric_cols = ['Hours', 'NSR', 'ANSR', 'Margin Cost', 'Expense Amount', '#Engagements', '#Opportunities', 'TER', 'Margin Amount']
-    for col_name in emp_numeric_cols:
-        if col_name in headers_emp:
-            col_idx = headers_emp.index(col_name) + 1
-            col_letter = get_column_letter(col_idx)
-            start_cell = f'{col_letter}2'
-            end_cell = f'{col_letter}{last_row_emp}'
-            formula = f'=SUBTOTAL(9,{start_cell}:{end_cell})'
-            ws_emp.cell(row=last_row_emp + 1, column=col_idx).value = formula
+    # Employee Summary totals and formatting
+    if 'Employee Summary' in wb.sheetnames:
+        ws_emp = wb['Employee Summary']
+        last_row_emp = ws_emp.max_row
+        headers_emp = [cell.value for cell in ws_emp[1]]
+        ws_emp.cell(row=last_row_emp + 1, column=1).value = 'TOTAL'
+        emp_numeric_cols = ['Hours', 'NSR', 'ANSR', 'Margin Cost', 'Expense Amount', '#Engagements', '#Opportunities', 'TER', 'Margin Amount']
+        for col_name in emp_numeric_cols:
+            if col_name in headers_emp:
+                col_idx = headers_emp.index(col_name) + 1
+                col_letter = get_column_letter(col_idx)
+                start_cell = f'{col_letter}2'
+                end_cell = f'{col_letter}{last_row_emp}'
+                formula = f'=SUBTOTAL(9,{start_cell}:{end_cell})'
+                ws_emp.cell(row=last_row_emp + 1, column=col_idx).value = formula
+        format_employee_summary_sheet(ws_emp)
+
+    # Monthly Summary totals and formatting
+    if 'Monthly Summary' in wb.sheetnames:
+        ws_monthly = wb['Monthly Summary']
+        last_row_monthly = ws_monthly.max_row
+        headers_monthly = [cell.value for cell in ws_monthly[1]]
+        ws_monthly.cell(row=last_row_monthly + 1, column=1).value = 'TOTAL'
+        monthly_numeric_cols = ['Hours', 'ANSR / Tech Revenue', 'Margin Cost', 'Expense Amount', 'Margin Amount', 'TER']
+        for col_name in monthly_numeric_cols:
+            if col_name in headers_monthly:
+                col_idx = headers_monthly.index(col_name) + 1
+                col_letter = get_column_letter(col_idx)
+                start_cell = f'{col_letter}2'
+                end_cell = f'{col_letter}{last_row_monthly}'
+                formula = f'=SUBTOTAL(9,{start_cell}:{end_cell})'
+                ws_monthly.cell(row=last_row_monthly + 1, column=col_idx).value = formula
+        format_monthly_summary_sheet(ws_monthly)
+    
+    if 'WIP vs BoB Recon' in wb.sheetnames:
+        format_recon_sheet(wb['WIP vs BoB Recon'])
+    
+    if 'KPI Totals' in wb.sheetnames:
+        format_kpi_sheet(wb['KPI Totals'])
+    
+    if 'KPI Bridge' in wb.sheetnames:
+        format_kpi_sheet(wb['KPI Bridge'])
 
     wb.save(output_file)
 
@@ -515,3 +821,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+   
