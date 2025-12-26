@@ -1,0 +1,75 @@
+{
+  "_comment": "Workflow Configuration for Engagement Analysis Automation",
+  
+  "sharepoint_config": "sharepoint_config.json",
+  "auth_type": "delegated",
+  
+  "work_directory": "./work",
+  "cleanup_work_directory": false,
+  
+  "downloads": {
+    "site_name": "YourTeamSite",
+    "folder_path": "Shared Documents/Engagement Analysis/Inputs",
+    "library_name": "Documents",
+    
+    "wips_pattern": "WIPs",
+    "bills_pattern": "Bills_",
+    "bob_pattern": "BoB_"
+  },
+  
+  "analysis": {
+    "detail_sheet": "Detail",
+    "header_row_index": null,
+    "fy_start": "2025-07-01",
+    "fy_end": "2026-06-30",
+    "invoice_month_from": "2025-08",
+    "billings": null,
+    "target_margin_pct": 28,
+    "print_markdown": false
+  },
+  
+  "uploads": {
+    "site_name": "YourTeamSite",
+    "folder_path": "Shared Documents/Engagement Analysis/Outputs",
+    "library_name": "Documents"
+  },
+  
+  "notification": {
+    "enabled": true,
+    "recipients": [
+      "team-member1@yourcompany.com",
+      "team-member2@yourcompany.com"
+    ],
+    "subject": "Engagement Analysis Complete - {date}",
+    "body": "The FY26 engagement analysis has been completed.\n\nPlease review the results in the attached file."
+  },
+  
+  "_instructions": {
+    "auth_type": "Use 'delegated' for interactive or 'app' for unattended automation",
+    "work_directory": "Temporary directory for downloaded and processed files",
+    "cleanup_work_directory": "Set to true to delete work files after completion",
+    
+    "downloads": {
+      "site_name": "Name of your SharePoint site (not the full URL)",
+      "folder_path": "Path to folder containing input files (relative to library root)",
+      "library_name": "Document library name (usually 'Documents')",
+      "patterns": "File name patterns to match (will download latest matching file)"
+    },
+    
+    "analysis": {
+      "fy_start/fy_end": "Fiscal year date range (YYYY-MM-DD)",
+      "invoice_month_from": "Filter Bills invoices from this month onwards (YYYY-MM)",
+      "billings": "Leave null to auto-calculate from Bills file",
+      "target_margin_pct": "Target margin percentage for KPI bridge"
+    },
+    
+    "uploads": {
+      "folder_path": "SharePoint folder where output will be uploaded"
+    },
+    
+    "notification": {
+      "enabled": "Set to false to skip email notification",
+      "recipients": "List of email addresses to notify"
+    }
+  }
+}
