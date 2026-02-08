@@ -95,6 +95,12 @@ def address_lookup_page():
     return render_template('address_lookup.html')
 
 
+@app.route('/test-autocomplete')
+def test_autocomplete():
+    """Test page for autocomplete functionality"""
+    return render_template('test_autocomplete.html')
+
+
 @app.route('/school-rankings')
 @login_required
 def school_rankings_page():
@@ -272,6 +278,133 @@ def autocomplete_streets():
             ORDER BY sl.street_name
             LIMIT 20
         """, (f'{query}%',))
+        
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        if conn:
+            conn.close()
+        return jsonify({'error': f'Database query failed: {str(e)}'}), 500
+
+
+@app.route('/api/school/<school_id>/autocomplete/streets', methods=['GET'])
+@login_required
+def autocomplete_school_streets(school_id):
+    """
+    Autocomplete street names filtered by school catchment area
+    Example: /api/school/2060/autocomplete/streets?q=George
+    """
+    query = request.args.get('q', '').strip()
+    
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT DISTINCT 
+                scs.street_name,
+                st.name as street_type
+            FROM public.school_catchment_streets scs
+            LEFT JOIN gnaf.street_type_aut st ON scs.street_type_code = st.code
+            WHERE scs.school_id = %s
+            AND UPPER(scs.street_name) LIKE UPPER(%s)
+            ORDER BY scs.street_name
+            LIMIT 20
+        """, (school_id, f'{query}%'))
+        
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        if conn:
+            conn.close()
+        return jsonify({'error': f'Database query failed: {str(e)}'}), 500
+
+
+@app.route('/api/school/<school_id>/autocomplete/suburbs', methods=['GET'])
+@login_required
+def autocomplete_school_suburbs(school_id):
+    """
+    Autocomplete suburb names filtered by school catchment area
+    Example: /api/school/2060/autocomplete/suburbs?q=Syd
+    """
+    query = request.args.get('q', '').strip()
+    
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT DISTINCT 
+                scs.locality_name as suburb,
+                scs.postcode
+            FROM public.school_catchment_streets scs
+            WHERE scs.school_id = %s
+            AND UPPER(scs.locality_name) LIKE UPPER(%s)
+            ORDER BY scs.locality_name
+            LIMIT 20
+        """, (school_id, f'{query}%'))
+        
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        if conn:
+            conn.close()
+        return jsonify({'error': f'Database query failed: {str(e)}'}), 500
+
+
+@app.route('/api/school/<school_id>/autocomplete/postcodes', methods=['GET'])
+@login_required
+def autocomplete_school_postcodes(school_id):
+    """
+    Autocomplete postcodes filtered by school catchment area
+    Example: /api/school/2060/autocomplete/postcodes?q=20
+    """
+    query = request.args.get('q', '').strip()
+    
+    if not query or len(query) < 1:
+        return jsonify([])
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT DISTINCT 
+                scs.postcode,
+                scs.locality_name as suburb
+            FROM public.school_catchment_streets scs
+            WHERE scs.school_id = %s
+            AND scs.postcode LIKE %s
+            ORDER BY scs.postcode
+            LIMIT 20
+        """, (school_id, f'{query}%'))
         
         results = cursor.fetchall()
         cursor.close()

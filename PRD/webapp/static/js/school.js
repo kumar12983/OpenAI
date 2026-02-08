@@ -37,6 +37,17 @@ const searchLimit = document.getElementById('searchLimit');
 const searchAddressBtn = document.getElementById('searchAddressBtn');
 const searchStreetSuggestions = document.getElementById('search-street-suggestions');
 const searchSuburbSuggestions = document.getElementById('search-suburb-suggestions');
+const searchPostcodeSuggestions = document.getElementById('search-postcode-suggestions');
+
+// Debug: Log if elements are found
+console.log('DOM Elements initialized:', {
+    searchStreet: !!searchStreet,
+    searchSuburb: !!searchSuburb,
+    searchPostcode: !!searchPostcode,
+    searchStreetSuggestions: !!searchStreetSuggestions,
+    searchSuburbSuggestions: !!searchSuburbSuggestions,
+    searchPostcodeSuggestions: !!searchPostcodeSuggestions
+});
 
 // Check for URL parameters to auto-load a school
 const urlParams = new URLSearchParams(window.location.search);
@@ -50,15 +61,17 @@ if (schoolIdParam) {
 }
 
 // ============================================
-// Address Search Autocomplete
+// Address Search Autocomplete (School-Specific)
 // ============================================
 
-// Autocomplete for Street Name in address filter
+// Autocomplete for Street Name in address filter (filtered by school catchment)
 let streetSearchDebounce;
 if (searchStreet && searchStreetSuggestions) {
     searchStreet.addEventListener('input', (e) => {
         clearTimeout(streetSearchDebounce);
         const query = e.target.value.trim();
+        
+        console.log('Street input event - query:', query, 'currentSchoolId:', currentSchoolId);
 
         if (query.length < 2) {
             searchStreetSuggestions.innerHTML = '';
@@ -66,10 +79,20 @@ if (searchStreet && searchStreetSuggestions) {
             return;
         }
 
+        // Require a school to be selected first
+        if (!currentSchoolId) {
+            searchStreetSuggestions.innerHTML = '<div class="suggestion-item no-results">Please select a school first</div>';
+            searchStreetSuggestions.style.display = 'block';
+            return;
+        }
+
         streetSearchDebounce = setTimeout(async () => {
             try {
-                const response = await fetch(`/api/autocomplete/streets?q=${encodeURIComponent(query)}`);
+                console.log('Fetching streets for school:', currentSchoolId);
+                const response = await fetch(`/api/school/${currentSchoolId}/autocomplete/streets?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
+                
+                console.log('Street autocomplete response:', data);
 
                 if (data.length > 0) {
                     searchStreetSuggestions.innerHTML = data.map(item => {
@@ -86,7 +109,8 @@ if (searchStreet && searchStreetSuggestions) {
                         });
                     });
                 } else {
-                    searchStreetSuggestions.style.display = 'none';
+                    searchStreetSuggestions.innerHTML = '<div class="suggestion-item no-results">No streets found in this catchment</div>';
+                    searchStreetSuggestions.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error fetching street suggestions:', error);
@@ -95,7 +119,7 @@ if (searchStreet && searchStreetSuggestions) {
     });
 }
 
-// Autocomplete for Suburb in address filter
+// Autocomplete for Suburb in address filter (filtered by school catchment)
 let suburbSearchDebounce;
 if (searchSuburb && searchSuburbSuggestions) {
     searchSuburb.addEventListener('input', (e) => {
@@ -108,15 +132,22 @@ if (searchSuburb && searchSuburbSuggestions) {
             return;
         }
 
+        // Require a school to be selected first
+        if (!currentSchoolId) {
+            searchSuburbSuggestions.innerHTML = '<div class="suggestion-item no-results">Please select a school first</div>';
+            searchSuburbSuggestions.style.display = 'block';
+            return;
+        }
+
         suburbSearchDebounce = setTimeout(async () => {
             try {
-                const response = await fetch(`/api/autocomplete/suburbs?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`/api/school/${currentSchoolId}/autocomplete/suburbs?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
                 if (data.length > 0) {
                     searchSuburbSuggestions.innerHTML = data.map(item =>
                         `<div class="suggestion-item" data-value="${item.suburb}">
-                            ${item.suburb} <span class="suggestion-meta">${item.state} ${item.postcode}</span>
+                            ${item.suburb} <span class="suggestion-meta">${item.postcode}</span>
                         </div>`
                     ).join('');
                     searchSuburbSuggestions.style.display = 'block';
@@ -129,10 +160,62 @@ if (searchSuburb && searchSuburbSuggestions) {
                         });
                     });
                 } else {
-                    searchSuburbSuggestions.style.display = 'none';
+                    searchSuburbSuggestions.innerHTML = '<div class="suggestion-item no-results">No suburbs found in this catchment</div>';
+                    searchSuburbSuggestions.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error fetching suburb suggestions:', error);
+            }
+        }, 300);
+    });
+}
+
+// Autocomplete for Postcode in address filter (filtered by school catchment)
+let postcodeSearchDebounce;
+if (searchPostcode && searchPostcodeSuggestions) {
+    searchPostcode.addEventListener('input', (e) => {
+        clearTimeout(postcodeSearchDebounce);
+        const query = e.target.value.trim();
+
+        if (query.length < 1) {
+            searchPostcodeSuggestions.innerHTML = '';
+            searchPostcodeSuggestions.style.display = 'none';
+            return;
+        }
+
+        // Require a school to be selected first
+        if (!currentSchoolId) {
+            searchPostcodeSuggestions.innerHTML = '<div class="suggestion-item no-results">Please select a school first</div>';
+            searchPostcodeSuggestions.style.display = 'block';
+            return;
+        }
+
+        postcodeSearchDebounce = setTimeout(async () => {
+            try {
+                const response = await fetch(`/api/school/${currentSchoolId}/autocomplete/postcodes?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    searchPostcodeSuggestions.innerHTML = data.map(item =>
+                        `<div class="suggestion-item" data-value="${item.postcode}">
+                            ${item.postcode} <span class="suggestion-meta">${item.suburb}</span>
+                        </div>`
+                    ).join('');
+                    searchPostcodeSuggestions.style.display = 'block';
+
+                    // Add click handlers
+                    searchPostcodeSuggestions.querySelectorAll('.suggestion-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            searchPostcode.value = item.dataset.value;
+                            searchPostcodeSuggestions.style.display = 'none';
+                        });
+                    });
+                } else {
+                    searchPostcodeSuggestions.innerHTML = '<div class="suggestion-item no-results">No postcodes found in this catchment</div>';
+                    searchPostcodeSuggestions.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching postcode suggestions:', error);
             }
         }, 300);
     });
@@ -143,6 +226,7 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('.autocomplete-wrapper')) {
         if (searchStreetSuggestions) searchStreetSuggestions.style.display = 'none';
         if (searchSuburbSuggestions) searchSuburbSuggestions.style.display = 'none';
+        if (searchPostcodeSuggestions) searchPostcodeSuggestions.style.display = 'none';
     }
 });
 
@@ -215,6 +299,8 @@ function displaySchoolSuggestions(schools) {
             schoolInput.value = schoolName;
             currentSchoolId = schoolId;
             schoolSuggestions.style.display = 'none';
+            
+            console.log('School selected - ID:', currentSchoolId, 'Name:', schoolName);
 
             // Auto-submit form
             loadSchoolData(schoolId);
