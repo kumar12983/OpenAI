@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Autocomplete</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        input { padding: 8px; width: 300px; }
+        .autocomplete-wrapper { position: relative; }
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-item:hover {
+            background: #f0f0f0;
+        }
+        .suggestion-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 10px;
+        }
+        #debug { margin-top: 20px; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>School Autocomplete Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Select a School</h2>
+        <p>School ID: <input type="text" id="schoolId" value="2060" /></p>
+        <p>Current School ID: <strong id="currentSchoolDisplay">None</strong></p>
+        <button onclick="setSchool()">Set School</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Test Street Autocomplete</h2>
+        <div class="autocomplete-wrapper">
+            <input type="text" id="streetInput" placeholder="Type street name (e.g., 'B')" />
+            <div id="streetSuggestions" class="autocomplete-suggestions"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Test Suburb Autocomplete</h2>
+        <div class="autocomplete-wrapper">
+            <input type="text" id="suburbInput" placeholder="Type suburb name" />
+            <div id="suburbSuggestions" class="autocomplete-suggestions"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 4: Test Postcode Autocomplete</h2>
+        <div class="autocomplete-wrapper">
+            <input type="text" id="postcodeInput" placeholder="Type postcode (e.g., '2')" />
+            <div id="postcodeSuggestions" class="autocomplete-suggestions"></div>
+        </div>
+    </div>
+
+    <div id="debug">
+        <h3>Debug Log</h3>
+        <pre id="debugLog"></pre>
+    </div>
+
+    <script>
+        let currentSchoolId = null;
+        
+        function log(message) {
+            const debugLog = document.getElementById('debugLog');
+            debugLog.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+
+        function setSchool() {
+            currentSchoolId = document.getElementById('schoolId').value;
+            document.getElementById('currentSchoolDisplay').textContent = currentSchoolId;
+            log('School ID set to: ' + currentSchoolId);
+        }
+
+        // Street autocomplete
+        const streetInput = document.getElementById('streetInput');
+        const streetSuggestions = document.getElementById('streetSuggestions');
+        let streetDebounce;
+
+        streetInput.addEventListener('input', (e) => {
+            clearTimeout(streetDebounce);
+            const query = e.target.value.trim();
+            
+            log('Street input: ' + query + ', schoolId: ' + currentSchoolId);
+
+            if (query.length < 2) {
+                streetSuggestions.innerHTML = '';
+                streetSuggestions.style.display = 'none';
+                return;
+            }
+
+            if (!currentSchoolId) {
+                streetSuggestions.innerHTML = '<div class="suggestion-item">Please set a school ID first</div>';
+                streetSuggestions.style.display = 'block';
+                return;
+            }
+
+            streetDebounce = setTimeout(async () => {
+                try {
+                    const url = `/api/school/${currentSchoolId}/autocomplete/streets?q=${encodeURIComponent(query)}`;
+                    log('Fetching: ' + url);
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    log('Received ' + data.length + ' streets');
+
+                    if (data.length > 0) {
+                        streetSuggestions.innerHTML = data.map(item => {
+                            const streetFull = item.street_type ? `${item.street_name} ${item.street_type}` : item.street_name;
+                            return `<div class="suggestion-item">${streetFull}</div>`;
+                        }).join('');
+                        streetSuggestions.style.display = 'block';
+                    } else {
+                        streetSuggestions.innerHTML = '<div class="suggestion-item">No streets found</div>';
+                        streetSuggestions.style.display = 'block';
+                    }
+                } catch (error) {
+                    log('Error: ' + error.message);
+                }
+            }, 300);
+        });
+
+        // Suburb autocomplete
+        const suburbInput = document.getElementById('suburbInput');
+        const suburbSuggestions = document.getElementById('suburbSuggestions');
+        let suburbDebounce;
+
+        suburbInput.addEventListener('input', (e) => {
+            clearTimeout(suburbDebounce);
+            const query = e.target.value.trim();
+
+            if (query.length < 2) {
+                suburbSuggestions.innerHTML = '';
+                suburbSuggestions.style.display = 'none';
+                return;
+            }
+
+            if (!currentSchoolId) {
+                suburbSuggestions.innerHTML = '<div class="suggestion-item">Please set a school ID first</div>';
+                suburbSuggestions.style.display = 'block';
+                return;
+            }
+
+            suburbDebounce = setTimeout(async () => {
+                try {
+                    const url = `/api/school/${currentSchoolId}/autocomplete/suburbs?q=${encodeURIComponent(query)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        suburbSuggestions.innerHTML = data.map(item =>
+                            `<div class="suggestion-item">${item.suburb} <span class="suggestion-meta">${item.postcode}</span></div>`
+                        ).join('');
+                        suburbSuggestions.style.display = 'block';
+                    } else {
+                        suburbSuggestions.innerHTML = '<div class="suggestion-item">No suburbs found</div>';
+                        suburbSuggestions.style.display = 'block';
+                    }
+                } catch (error) {
+                    log('Error: ' + error.message);
+                }
+            }, 300);
+        });
+
+        // Postcode autocomplete
+        const postcodeInput = document.getElementById('postcodeInput');
+        const postcodeSuggestions = document.getElementById('postcodeSuggestions');
+        let postcodeDebounce;
+
+        postcodeInput.addEventListener('input', (e) => {
+            clearTimeout(postcodeDebounce);
+            const query = e.target.value.trim();
+
+            if (query.length < 1) {
+                postcodeSuggestions.innerHTML = '';
+                postcodeSuggestions.style.display = 'none';
+                return;
+            }
+
+            if (!currentSchoolId) {
+                postcodeSuggestions.innerHTML = '<div class="suggestion-item">Please set a school ID first</div>';
+                postcodeSuggestions.style.display = 'block';
+                return;
+            }
+
+            postcodeDebounce = setTimeout(async () => {
+                try {
+                    const url = `/api/school/${currentSchoolId}/autocomplete/postcodes?q=${encodeURIComponent(query)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        postcodeSuggestions.innerHTML = data.map(item =>
+                            `<div class="suggestion-item">${item.postcode} <span class="suggestion-meta">${item.suburb}</span></div>`
+                        ).join('');
+                        postcodeSuggestions.style.display = 'block';
+                    } else {
+                        postcodeSuggestions.innerHTML = '<div class"suggestion-item">No postcodes found</div>';
+                        postcodeSuggestions.style.display = 'block';
+                    }
+                } catch (error) {
+                    log('Error: ' + error.message);
+                }
+            }, 300);
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                streetSuggestions.style.display = 'none';
+                suburbSuggestions.style.display = 'none';
+                postcodeSuggestions.style.display = 'none';
+            }
+        });
+
+        log('Test page loaded');
+    </script>
+</body>
+</html>
